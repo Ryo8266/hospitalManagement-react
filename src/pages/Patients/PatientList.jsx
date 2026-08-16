@@ -2,42 +2,40 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
 
-function DoctorList() {
-  const [doctors, setDoctors] = useState([]);
+function PatientList() {
+  const [patients, setPatients] = useState([]);
 
-  const fetchDoctors = async () => {
+  const fetchPatients = async () => {
     try {
-      const res = await api.get("/doctors");
-      setDoctors(res.data);
+      const res = await api.get("/patients");
+      setPatients(res.data);
     } catch {
       console.log("Lỗi");
     }
   };
 
-  const deleteDoctor = async (id) => {
+  const deletePatient = async (id) => {
     try {
-      await api.delete(`/doctors/${id}`);
-      alert("Xóa thành công");
-      fetchDoctors();
+      await api.delete(`/patients/${id}`);
+      alert("Xóa bệnh nhân thành công");
+      fetchPatients();
     } catch {
-      console.log("Lỗi");
+      alert("Xóa thất bại");
     }
   };
 
   useEffect(() => {
-    fetchDoctors();
+    fetchPatients();
   }, []);
 
   return (
     <section className="p-8 flex-1">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-[34px] font-bold text-[#1f2937]">
-          Danh sách bác sĩ
-        </h2>
-<Link to="/doctors/create">
+        <h2 className="text-[34px] font-bold text-[#1f2937]">Danh sách bệnh nhân</h2>
+        <Link to="/patients/create">
           <button className="flex items-center gap-2.5 bg-[#0d6efd] text-white px-6 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 hover:bg-[#0b5ed7]">
             <i className="fa-solid fa-plus text-lg"></i>
-            Thêm bác sĩ
+            Thêm bệnh nhân
           </button>
         </Link>
       </div>
@@ -47,27 +45,22 @@ function DoctorList() {
           <i className="fa-solid fa-magnifying-glass text-[#999] text-lg"></i>
           <input
             type="text"
-            placeholder="Tìm kiếm theo họ tên, chuyên khoa, SĐT, email..."
+            placeholder="Tìm kiếm theo họ tên, số điện thoại hoặc email"
             className="flex-1 border-none outline-none ml-3.5 text-[15px] bg-transparent"
           />
         </div>
 
-        <select className="w-[250px] h-14 border border-[#dfe3eb] rounded-lg px-4 text-[15px] bg-white outline-none cursor-pointer focus:border-[#0d6efd]">
-          <option>Khoa</option>
-          <option>Nội tổng quát</option>
-          <option>Tim mạch</option>
-          <option>Nhi khoa</option>
-        </select>
-
-        <select className="w-[250px] h-14 border border-[#dfe3eb] rounded-lg px-4 text-[15px] bg-white outline-none cursor-pointer focus:border-[#0d6efd]">
-          <option>Trạng thái</option>
-          <option>Active</option>
-          <option>Inactive</option>
-        </select>
-
         <button className="h-14 flex items-center gap-2.5 px-7 bg-[#0d6efd] text-white rounded-lg text-base font-semibold transition-all duration-300 hover:bg-[#0b5ed7]">
           <i className="fa-solid fa-magnifying-glass text-[17px]"></i>
           Tìm kiếm
+        </button>
+
+        <button
+          onClick={fetchPatients}
+          className="h-14 flex items-center gap-2.5 px-7 border border-[#dfe3eb] text-[#555] rounded-lg text-base font-semibold bg-white transition-all duration-300 hover:bg-[#f5f5f5]"
+        >
+          <i className="fa-solid fa-rotate-right text-[17px]"></i>
+          Làm mới
         </button>
       </div>
 
@@ -79,13 +72,13 @@ function DoctorList() {
                 STT
               </th>
               <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Họ và tên
+                Họ tên
               </th>
               <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Chuyên khoa
+                Ngày sinh
               </th>
               <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Khoa
+                Giới tính
               </th>
               <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
                 Số điện thoại
@@ -94,7 +87,10 @@ function DoctorList() {
                 Email
               </th>
               <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Trạng thái
+                Địa chỉ
+              </th>
+              <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
+                Ngày đăng ký
               </th>
               <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
                 Thao tác
@@ -102,53 +98,48 @@ function DoctorList() {
             </tr>
           </thead>
           <tbody>
-            {doctors.map((doctor, index) => (
+            {patients.map((patient, index) => (
               <tr
-                key={doctor.doctorId}
+                key={patient.id}
                 className="transition-all duration-250 hover:bg-[#f9fbff]"
               >
                 <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
                   {index + 1}
                 </td>
-                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {doctor.fullName}
+                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5] font-medium text-[#0d6efd]">
+                  {patient.fullName}
                 </td>
                 <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {doctor.specialization}
+                  {patient.dateOfBirth}
                 </td>
                 <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {doctor.departmentName}
+                  {patient.gender}
                 </td>
                 <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {doctor.phone || "-"}
+                  {patient.phoneNumber}
                 </td>
                 <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {doctor.email || "-"}
+                  {patient.email}
                 </td>
                 <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  <span
-                    className={`inline-block px-3.5 py-1.5 rounded-[30px] text-[13px] font-semibold ${
-                      doctor.status === "Active"
-                        ? "text-[#1f9254] bg-[#e8f8ef]"
-                        : "text-[#d14343] bg-[#ffe9e9]"
-                    }`}
-                  >
-                    {doctor.status}
-                  </span>
+                  {patient.address}
+                </td>
+                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
+                  {patient.createdAt}
                 </td>
                 <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5] whitespace-nowrap">
-                  <Link to={`/doctors/${doctor.doctorId}`}>
+                  <Link to={`/patients/${patient.id}`}>
                     <button className="w-10 h-10 rounded-lg border border-[#e5e7eb] text-[#0d6efd] bg-white transition-all duration-250 mr-2 hover:bg-[#0d6efd] hover:text-white">
                       <i className="fa-regular fa-eye"></i>
                     </button>
                   </Link>
-                  <Link to={`/doctors/${doctor.doctorId}/edit`}>
-                  <button className="w-10 h-10 rounded-lg border border-[#e5e7eb] text-[#f59e0b] bg-white transition-all duration-250 mr-2 hover:bg-[#f59e0b] hover:text-white">
-                    <i className="fa-solid fa-pen"></i>
-                  </button>
-                </Link>
+                  <Link to={`/patients/${patient.id}/edit`}>
+                    <button className="w-10 h-10 rounded-lg border border-[#e5e7eb] text-[#f59e0b] bg-white transition-all duration-250 mr-2 hover:bg-[#f59e0b] hover:text-white">
+                      <i className="fa-solid fa-pen"></i>
+                    </button>
+                  </Link>
                   <button
-                    onClick={() => deleteDoctor(doctor.doctorId)}
+                    onClick={() => deletePatient(patient.id)}
                     className="w-10 h-10 rounded-lg border border-[#e5e7eb] text-[#ef4444] bg-white transition-all duration-250 hover:bg-[#ef4444] hover:text-white"
                   >
                     <i className="fa-regular fa-trash-can"></i>
@@ -163,4 +154,4 @@ function DoctorList() {
   );
 }
 
-export default DoctorList;
+export default PatientList;

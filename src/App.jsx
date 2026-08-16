@@ -6,6 +6,15 @@ import DepartmentDetail from './pages/Departments/DepartmentDetail'
 import UpdateDepartment from './pages/Departments/UpdateDepartment'
 import DoctorList from './pages/Doctors/DoctorList'
 import DoctorDetail from './pages/Doctors/DoctorDetail'
+import CreateDoctor from './pages/Doctors/CreateDoctor'
+import UpdateDoctor from './pages/Doctors/UpdateDoctor'
+import PatientList from './pages/Patients/PatientList'
+import PatientDetail from './pages/Patients/PatientDetail'
+import CreatePatient from './pages/Patients/CreatePatient'
+import UpdatePatient from './pages/Patients/UpdatePatient'
+import RoomList from './pages/Rooms/RoomList'
+import CreateRoom from './pages/Rooms/CreateRoom'
+import UpdateRoomStatus from './pages/Rooms/UpdateRoomStatus'
 
 function App() {
   return (
@@ -18,6 +27,15 @@ function App() {
         <Route path="departments/:id/edit" element={<UpdateDepartment />} />
         <Route path="doctors" element={<DoctorList />} />
         <Route path="doctors/:id" element={<DoctorDetail />} />
+        <Route path="doctors/create" element={<CreateDoctor />} />
+        <Route path="doctors/:id/edit" element={<UpdateDoctor />} />
+        <Route path="patients" element={<PatientList />} />
+        <Route path="patients/:id" element={<PatientDetail />} />
+        <Route path="patients/create" element={<CreatePatient />} />
+        <Route path="patients/:id/edit" element={<UpdatePatient />} />
+        <Route path="rooms" element={<RoomList />} />
+        <Route path="rooms/create" element={<CreateRoom />} />
+        <Route path="rooms/:id/edit" element={<UpdateRoomStatus />} />
       </Route>
     </Routes>
   )

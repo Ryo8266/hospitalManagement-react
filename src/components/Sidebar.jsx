@@ -8,12 +8,13 @@ const menuItems = [
     label: "Quản lý bác sĩ",
     icon: "fa-solid fa-user-doctor",
   },
-  { path: "#", label: "Quản lý bệnh nhân", icon: "fa-solid fa-users" },
-  { path: "#", label: "Quản lý phòng khám", icon: "fa-solid fa-hospital" },
+  { path: "/patients", label: "Quản lý bệnh nhân", icon: "fa-solid fa-users" },
+  { path: "/rooms", label: "Quản lý phòng khám", icon: "fa-solid fa-hospital" },
   { path: "#", label: "Quản lý lịch khám", icon: "fa-solid fa-calendar-days" },
   { path: "#", label: "Quản lý thuốc", icon: "fa-solid fa-capsules" },
   { path: "#", label: "Quản lý hóa đơn", icon: "fa-solid fa-file-invoice" },
   { path: "#", label: "Thống kê", icon: "fa-solid fa-chart-column" },
+  { path: "#", label: "Cài đặt", icon: "fa-solid fa-gear" },
 ];
 
 function Sidebar() {
@@ -36,7 +37,7 @@ function Sidebar() {
           <li key={item.label} className="mb-2">
             <Link
               to={item.path}
-              className={`flex items-center gap-4 py-3.5 px-4.5 rounded-xl transition-all duration-300 text-[15px] ${
+              className={`flex items-center gap-4 py-3.5 px-4.5 rounded-xl transition-all duration-300 text-[15px] whitespace-nowrap ${
                 location.pathname === item.path
                   ? "bg-white text-[#0f4ba8] font-semibold"
                   : "hover:bg-white/15"
