@@ -1,9 +1,30 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
+import PageHeader from "../../components/ui/PageHeader";
+import TableCard from "../../components/ui/TableCard";
+import Pagination from "../../components/ui/Pagination";
+import StatusBadge from "../../components/ui/StatusBadge";
+import RowActions from "../../components/ui/RowActions";
+import {
+  Toolbar,
+  ToolbarField,
+  SearchInput,
+  SearchButton,
+  RefreshButton,
+} from "../../components/ui/Toolbar";
+import { btnPrimary, selectClass, thClass, tdClass } from "../../components/ui/styles";
+
+const PAGE_SIZE = 7;
 
 function DoctorList() {
   const [doctors, setDoctors] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [search, setSearch] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [page, setPage] = useState(1);
 
   const fetchDoctors = async () => {
     try {
@@ -14,151 +35,167 @@ function DoctorList() {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const res = await api.get("/departments");
+      setDepartments(res.data);
+    } catch {
+      console.log("Lỗi khi lấy danh sách khoa");
+    }
+  };
+
   const deleteDoctor = async (id) => {
+    if (!confirm("Bạn có chắc muốn xóa bác sĩ này?")) return;
     try {
       await api.delete(`/doctors/${id}`);
-      alert("Xóa thành công");
       fetchDoctors();
     } catch {
-      console.log("Lỗi");
+      alert("Xóa thất bại");
     }
   };
 
   useEffect(() => {
     fetchDoctors();
+    fetchDepartments();
   }, []);
+
+  const applySearch = () => {
+    setSearch(searchText);
+    setPage(1);
+  };
+
+  const reset = () => {
+    setSearchText("");
+    setSearch("");
+    setFilterDepartment("");
+    setFilterStatus("");
+    setPage(1);
+    fetchDoctors();
+  };
+
+  const filtered = doctors.filter((doctor) => {
+    if (filterDepartment && doctor.departmentName !== filterDepartment) return false;
+    if (filterStatus && doctor.status !== filterStatus) return false;
+    if (search) {
+      const keyword = search.trim().toLowerCase();
+      const haystack = `${doctor.fullName || ""} ${doctor.specialization || ""} ${
+        doctor.phone || ""
+      } ${doctor.email || ""}`.toLowerCase();
+      if (!haystack.includes(keyword)) return false;
+    }
+    return true;
+  });
+
+  const pageDoctors = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <section className="p-8 flex-1">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-[34px] font-bold text-[#1f2937]">
-          Danh sách bác sĩ
-        </h2>
-<Link to="/doctors/create">
-          <button className="flex items-center gap-2.5 bg-[#0d6efd] text-white px-6 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 hover:bg-[#0b5ed7]">
-            <i className="fa-solid fa-plus text-lg"></i>
-            Thêm bác sĩ
-          </button>
+      <PageHeader title="Danh sách bác sĩ">
+        <Link to="/doctors/create" className={btnPrimary}>
+          <i className="fa-solid fa-plus"></i>
+          Thêm bác sĩ
         </Link>
-      </div>
+      </PageHeader>
 
-      <div className="flex items-center gap-4.5 mb-8">
-        <div className="flex-1 h-14 flex items-center bg-white border border-[#dfe3eb] rounded-lg px-4.5">
-          <i className="fa-solid fa-magnifying-glass text-[#999] text-lg"></i>
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo họ tên, chuyên khoa, SĐT, email..."
-            className="flex-1 border-none outline-none ml-3.5 text-[15px] bg-transparent"
-          />
-        </div>
+      <Toolbar>
+        <SearchInput
+          value={searchText}
+          onChange={setSearchText}
+          onEnter={applySearch}
+          placeholder="Tìm kiếm theo họ tên, chuyên khoa, SĐT, email..."
+        />
 
-        <select className="w-[250px] h-14 border border-[#dfe3eb] rounded-lg px-4 text-[15px] bg-white outline-none cursor-pointer focus:border-[#0d6efd]">
-          <option>Khoa</option>
-          <option>Nội tổng quát</option>
-          <option>Tim mạch</option>
-          <option>Nhi khoa</option>
-        </select>
-
-        <select className="w-[250px] h-14 border border-[#dfe3eb] rounded-lg px-4 text-[15px] bg-white outline-none cursor-pointer focus:border-[#0d6efd]">
-          <option>Trạng thái</option>
-          <option>Active</option>
-          <option>Inactive</option>
-        </select>
-
-        <button className="h-14 flex items-center gap-2.5 px-7 bg-[#0d6efd] text-white rounded-lg text-base font-semibold transition-all duration-300 hover:bg-[#0b5ed7]">
-          <i className="fa-solid fa-magnifying-glass text-[17px]"></i>
-          Tìm kiếm
-        </button>
-      </div>
-
-      <div className="bg-white border border-[#e5e7eb] rounded-xl overflow-hidden">
-        <table className="w-full border-collapse min-w-[1200px]">
-          <thead className="bg-[#f8fafc]">
-            <tr>
-              <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                STT
-              </th>
-              <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Họ và tên
-              </th>
-              <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Chuyên khoa
-              </th>
-              <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Khoa
-              </th>
-              <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Số điện thoại
-              </th>
-              <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Email
-              </th>
-              <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Trạng thái
-              </th>
-              <th className="py-5 px-5 text-left text-[15px] font-semibold text-[#374151] border-b border-[#e5e7eb]">
-                Thao tác
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {doctors.map((doctor, index) => (
-              <tr
-                key={doctor.doctorId}
-                className="transition-all duration-250 hover:bg-[#f9fbff]"
-              >
-                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {index + 1}
-                </td>
-                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {doctor.fullName}
-                </td>
-                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {doctor.specialization}
-                </td>
-                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {doctor.departmentName}
-                </td>
-                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {doctor.phone || "-"}
-                </td>
-                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  {doctor.email || "-"}
-                </td>
-                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5]">
-                  <span
-                    className={`inline-block px-3.5 py-1.5 rounded-[30px] text-[13px] font-semibold ${
-                      doctor.status === "Active"
-                        ? "text-[#1f9254] bg-[#e8f8ef]"
-                        : "text-[#d14343] bg-[#ffe9e9]"
-                    }`}
-                  >
-                    {doctor.status}
-                  </span>
-                </td>
-                <td className="py-5 px-5 text-[15px] border-b border-[#f0f2f5] whitespace-nowrap">
-                  <Link to={`/doctors/${doctor.doctorId}`}>
-                    <button className="w-10 h-10 rounded-lg border border-[#e5e7eb] text-[#0d6efd] bg-white transition-all duration-250 mr-2 hover:bg-[#0d6efd] hover:text-white">
-                      <i className="fa-regular fa-eye"></i>
-                    </button>
-                  </Link>
-                  <Link to={`/doctors/${doctor.doctorId}/edit`}>
-                  <button className="w-10 h-10 rounded-lg border border-[#e5e7eb] text-[#f59e0b] bg-white transition-all duration-250 mr-2 hover:bg-[#f59e0b] hover:text-white">
-                    <i className="fa-solid fa-pen"></i>
-                  </button>
-                </Link>
-                  <button
-                    onClick={() => deleteDoctor(doctor.doctorId)}
-                    className="w-10 h-10 rounded-lg border border-[#e5e7eb] text-[#ef4444] bg-white transition-all duration-250 hover:bg-[#ef4444] hover:text-white"
-                  >
-                    <i className="fa-regular fa-trash-can"></i>
-                  </button>
-                </td>
-              </tr>
+        <ToolbarField label="Khoa">
+          <select
+            value={filterDepartment}
+            onChange={(e) => {
+              setFilterDepartment(e.target.value);
+              setPage(1);
+            }}
+            className={selectClass}
+          >
+            <option value="">Tất cả</option>
+            {departments.map((dept) => (
+              <option key={dept.departmentId} value={dept.departmentName}>
+                {dept.departmentName}
+              </option>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </select>
+        </ToolbarField>
+
+        <ToolbarField label="Trạng thái">
+          <select
+            value={filterStatus}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              setPage(1);
+            }}
+            className={selectClass}
+          >
+            <option value="">Tất cả</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </ToolbarField>
+
+        <SearchButton onClick={applySearch} />
+        <RefreshButton onClick={reset} />
+      </Toolbar>
+
+      <TableCard
+        minWidth="1200px"
+        pagination={
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            total={filtered.length}
+            unit="bác sĩ"
+            onChange={setPage}
+          />
+        }
+      >
+        <thead className="bg-[#f8fafc]">
+          <tr>
+            <th className={thClass}>STT</th>
+            <th className={thClass}>Họ và tên</th>
+            <th className={thClass}>Chuyên khoa</th>
+            <th className={thClass}>Khoa</th>
+            <th className={thClass}>Số điện thoại</th>
+            <th className={thClass}>Email</th>
+            <th className={thClass}>Trạng thái</th>
+            <th className={thClass}>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pageDoctors.map((doctor, index) => (
+            <tr key={doctor.doctorId} className="transition-colors hover:bg-[#f9fbff]">
+              <td className={tdClass}>{(page - 1) * PAGE_SIZE + index + 1}</td>
+              <td className={tdClass}>{doctor.fullName}</td>
+              <td className={tdClass}>{doctor.specialization}</td>
+              <td className={tdClass}>{doctor.departmentName}</td>
+              <td className={tdClass}>{doctor.phone || "-"}</td>
+              <td className={tdClass}>{doctor.email || "-"}</td>
+              <td className={tdClass}>
+                <StatusBadge status={doctor.status} />
+              </td>
+              <td className={tdClass}>
+                <RowActions
+                  viewTo={`/doctors/${doctor.doctorId}`}
+                  editTo={`/doctors/${doctor.doctorId}/edit`}
+                  onDelete={() => deleteDoctor(doctor.doctorId)}
+                />
+              </td>
+            </tr>
+          ))}
+          {pageDoctors.length === 0 && (
+            <tr>
+              <td colSpan={8} className="py-10 text-center text-[14px] text-[#6b7280]">
+                Không có bác sĩ nào
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </TableCard>
     </section>
   );
 }

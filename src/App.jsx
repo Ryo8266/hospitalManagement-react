@@ -13,8 +13,13 @@ import PatientDetail from './pages/Patients/PatientDetail'
 import CreatePatient from './pages/Patients/CreatePatient'
 import UpdatePatient from './pages/Patients/UpdatePatient'
 import RoomList from './pages/Rooms/RoomList'
+import RoomDetail from './pages/Rooms/RoomDetail'
 import CreateRoom from './pages/Rooms/CreateRoom'
 import UpdateRoomStatus from './pages/Rooms/UpdateRoomStatus'
+import AppointmentList from './pages/Appointments/AppointmentList'
+import AppointmentDetail from './pages/Appointments/AppointmentDetail'
+import CreateAppointment from './pages/Appointments/CreateAppointment'
+import UpdateDiagnosis from './pages/Appointments/UpdateDiagnosis'
 
 function App() {
   return (
@@ -35,7 +40,12 @@ function App() {
         <Route path="patients/:id/edit" element={<UpdatePatient />} />
         <Route path="rooms" element={<RoomList />} />
         <Route path="rooms/create" element={<CreateRoom />} />
+        <Route path="rooms/:id" element={<RoomDetail />} />
         <Route path="rooms/:id/edit" element={<UpdateRoomStatus />} />
+        <Route path="appointments" element={<AppointmentList />} />
+        <Route path="appointments/create" element={<CreateAppointment />} />
+        <Route path="appointments/:id" element={<AppointmentDetail />} />
+        <Route path="appointments/:id/diagnosis" element={<UpdateDiagnosis />} />
       </Route>
     </Routes>
   )

@@ -1,11 +1,34 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import PageHeader from "../../components/ui/PageHeader";
+import Card from "../../components/ui/Card";
+import TableCard from "../../components/ui/TableCard";
+import Pagination from "../../components/ui/Pagination";
+import StatusBadge from "../../components/ui/StatusBadge";
+import { thClass, tdClass } from "../../components/ui/styles";
+import { formatDate, formatDateTime, formatTime } from "../../utils/format";
+
+const PAGE_SIZE = 5;
+
+function InfoRow({ label, children, last }) {
+  return (
+    <div
+      className={`grid grid-cols-[140px_1fr] items-start py-3.5 ${
+        last ? "" : "border-b border-[#f3f4f6]"
+      }`}
+    >
+      <span className="text-[14px] text-[#6b7280]">{label}</span>
+      <span className="text-[15px] text-[#1f2937]">{children}</span>
+    </div>
+  );
+}
 
 function PatientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [patient, setPatient] = useState(null);
+  const [page, setPage] = useState(1);
 
   const fetchPatientDetail = async () => {
     try {
@@ -17,215 +40,129 @@ function PatientDetail() {
   };
 
   const deletePatient = async () => {
+    if (!confirm("Bạn có chắc muốn xóa bệnh nhân này?")) return;
     try {
       await api.delete(`/patients/${id}`);
-      alert("Xóa bệnh nhân thành công");
       navigate("/patients");
     } catch {
       alert("Xóa thất bại");
     }
   };
 
-  const updatePatient = () => {
-    navigate(`/patients/${id}/edit`);
-  };
-
   useEffect(() => {
     fetchPatientDetail();
   }, [id]);
 
-  const statusBadge = (status) => {
-    switch (status) {
-      case "Completed":
-        return "bg-[#dcfce7] text-[#15803d]";
-      case "Scheduled":
-        return "bg-[#fef3c7] text-[#b45309]";
-      case "Cancelled":
-        return "bg-[#fee2e2] text-[#dc2626]";
-      default:
-        return "bg-[#dbeafe] text-[#2563eb]";
-    }
-  };
-
-  const statusLabel = (status) => {
-    switch (status) {
-      case "Completed":
-        return "Đã khám";
-      case "Scheduled":
-        return "Đã đặt";
-      case "Cancelled":
-        return "Đã hủy";
-      default:
-        return status;
-    }
-  };
-
   if (!patient) {
     return (
       <section className="p-8 flex-1 flex items-center justify-center">
-        <p className="text-lg text-[#666]">Đang tải...</p>
+        <p className="text-[15px] text-[#6b7280]">Đang tải...</p>
       </section>
     );
   }
 
+  const appointments = patient.appointments || [];
+  const pageAppointments = appointments.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
-    <section className="p-[30px] flex-1">
-      <div className="flex items-center gap-3 mb-[28px] text-[15px] text-[#666]">
-        <span>Quản lý bệnh nhân</span>
-        <i className="fa-solid fa-angle-right text-[12px] text-[#bbb]"></i>
-        <span>Danh sách bệnh nhân</span>
-        <i className="fa-solid fa-angle-right text-[12px] text-[#bbb]"></i>
-        <strong className="text-[#111]">Chi tiết bệnh nhân</strong>
-      </div>
+    <section className="p-8 flex-1">
+      <PageHeader title="Chi tiết bệnh nhân" backTo="/patients" />
 
-      <div className="flex justify-between items-center mb-6">
-        <Link to="/patients">
-          <button className="flex items-center gap-2.5 px-5.5 py-3 rounded-lg text-[15px] font-semibold border border-[#ddd] text-[#666] bg-white transition-all duration-300 hover:bg-[#f3f3f3]">
-            <i className="fa-solid fa-arrow-left"></i>
-            Quay lại danh sách
-          </button>
-        </Link>
-        <div className="flex gap-[15px]">
-          <button
-            onClick={updatePatient}
-            className="flex items-center gap-2.5 px-5.5 py-3 rounded-lg text-[15px] font-semibold bg-[#1b66ff] text-white transition-all duration-300 hover:bg-[#0056e7]"
+      <div className="grid grid-cols-[360px_1fr] gap-6 items-start">
+        <Card
+          title="Thông tin bệnh nhân"
+          footer={
+            <div className="flex gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => navigate(`/patients/${id}/edit`)}
+                className="flex-1 h-11 inline-flex items-center justify-center gap-2.5 rounded-lg border border-[#1a6cf0] text-[#1a6cf0] text-[14px] font-semibold transition-colors hover:bg-[#1a6cf0] hover:text-white"
+              >
+                <i className="fa-solid fa-pen"></i>
+                Cập nhật
+              </button>
+              <button
+                type="button"
+                onClick={deletePatient}
+                className="flex-1 h-11 inline-flex items-center justify-center gap-2.5 rounded-lg border border-[#ef4444] text-[#ef4444] text-[14px] font-semibold transition-colors hover:bg-[#ef4444] hover:text-white"
+              >
+                <i className="fa-regular fa-trash-can"></i>
+                Xóa bệnh nhân
+              </button>
+            </div>
+          }
+        >
+          <InfoRow label="Mã bệnh nhân">{patient.id}</InfoRow>
+          <InfoRow label="Họ và tên">{patient.fullName}</InfoRow>
+          <InfoRow label="Ngày sinh">{formatDate(patient.dateOfBirth)}</InfoRow>
+          <InfoRow label="Giới tính">{patient.gender}</InfoRow>
+          <InfoRow label="Số điện thoại">{patient.phone || "-"}</InfoRow>
+          <InfoRow label="Email">{patient.email || "-"}</InfoRow>
+          <InfoRow label="Địa chỉ">{patient.address || "-"}</InfoRow>
+          <InfoRow label="Ngày đăng ký" last>
+            {formatDateTime(patient.createdAt)}
+          </InfoRow>
+        </Card>
+
+        <Card
+          title="Lịch khám của bệnh nhân"
+          bodyClassName="p-0"
+          extra={
+            <div className="bg-[#f3f4f6] px-4 py-2 rounded-lg text-[14px] font-semibold text-[#374151]">
+              Tổng số: {appointments.length}
+            </div>
+          }
+        >
+          <TableCard
+            minWidth="1000px"
+            bordered={false}
+            pagination={
+              <Pagination
+                page={page}
+                pageSize={PAGE_SIZE}
+                total={appointments.length}
+                unit="lịch khám"
+                onChange={setPage}
+              />
+            }
           >
-            <i className="fa-solid fa-pen"></i>
-            Cập nhật
-          </button>
-          <button
-            onClick={deletePatient}
-            className="flex items-center gap-2.5 px-5.5 py-3 rounded-lg text-[15px] font-semibold bg-[#ef4444] text-white transition-all duration-300 hover:bg-[#d62828]"
-          >
-            <i className="fa-regular fa-trash-can"></i>
-            Xóa
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-[360px_1fr] gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-[0_2px_10px_rgba(0,0,0,0.05)] border border-[#e8edf5] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(0,0,0,0.08)]">
-          <div className="flex items-center gap-3 pb-[22px] mb-0 border-b border-[#edf2f7]">
-            <i className="fa-solid fa-user text-[#2563eb] text-[22px]"></i>
-            <h3 className="text-[24px] font-bold text-[#222]">Thông tin bệnh nhân</h3>
-          </div>
-          <div className="px-[25px] pt-0 pb-6">
-            <div className="grid grid-cols-[150px_1fr] items-center py-[18px] border-b border-[#f3f4f6]">
-              <label className="font-semibold text-[#444]">Mã bệnh nhân</label>
-              <span className="text-[#222] text-[15px]">{patient.id}</span>
-            </div>
-            <div className="grid grid-cols-[150px_1fr] items-center py-[18px] border-b border-[#f3f4f6]">
-              <label className="font-semibold text-[#444]">Họ và tên</label>
-              <span className="text-[#222] text-[15px]">{patient.fullName}</span>
-            </div>
-            <div className="grid grid-cols-[150px_1fr] items-center py-[18px] border-b border-[#f3f4f6]">
-              <label className="font-semibold text-[#444]">Ngày sinh</label>
-              <span className="text-[#222] text-[15px]">{patient.dateOfBirth}</span>
-            </div>
-            <div className="grid grid-cols-[150px_1fr] items-center py-[18px] border-b border-[#f3f4f6]">
-              <label className="font-semibold text-[#444]">Giới tính</label>
-              <span className="text-[#222] text-[15px]">{patient.gender}</span>
-            </div>
-            <div className="grid grid-cols-[150px_1fr] items-center py-[18px] border-b border-[#f3f4f6]">
-              <label className="font-semibold text-[#444]">Số điện thoại</label>
-              <span className="text-[#222] text-[15px]">{patient.phoneNumber || "-"}</span>
-            </div>
-            <div className="grid grid-cols-[150px_1fr] items-center py-[18px] border-b border-[#f3f4f6]">
-              <label className="font-semibold text-[#444]">Email</label>
-              <span className="text-[#222] text-[15px]">{patient.email || "-"}</span>
-            </div>
-            <div className="grid grid-cols-[150px_1fr] items-center py-[18px] border-b border-[#f3f4f6]">
-              <label className="font-semibold text-[#444]">Địa chỉ</label>
-              <span className="text-[#222] text-[15px]">{patient.address || "-"}</span>
-            </div>
-            <div className="grid grid-cols-[150px_1fr] items-center py-[18px]">
-              <label className="font-semibold text-[#444]">Ngày đăng ký</label>
-              <span className="text-[#222] text-[15px]">{patient.createdAt || "-"}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-[0_2px_10px_rgba(0,0,0,0.05)] border border-[#e8edf5] transition-all duration-300 hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)]">
-          <div className="flex items-center justify-between pb-[22px] border-b border-[#edf2f7]">
-            <div className="flex items-center gap-3">
-              <i className="fa-regular fa-calendar text-[#2563eb] text-[22px]"></i>
-              <h3 className="text-[24px] font-bold text-[#222]">Lịch khám</h3>
-            </div>
-            <div className="bg-[#f3f4f6] px-4.5 py-2.5 rounded-lg font-semibold">
-              Tổng số: <strong>{patient.appointments?.length || 0}</strong>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead className="bg-[#f8fafc]">
-                <tr>
-                  <th className="py-4 px-4.5 text-left text-[14px] font-bold text-[#374151] border-b border-[#e5e7eb] w-[70px] text-center">
-                    STT
-                  </th>
-                  <th className="py-4 px-4.5 text-left text-[14px] font-bold text-[#374151] border-b border-[#e5e7eb] w-[150px]">
-                    Ngày khám
-                  </th>
-                  <th className="py-4 px-4.5 text-left text-[14px] font-bold text-[#374151] border-b border-[#e5e7eb] w-[120px]">
-                    Giờ khám
-                  </th>
-                  <th className="py-4 px-4.5 text-left text-[14px] font-bold text-[#374151] border-b border-[#e5e7eb] w-[160px]">
-                    Bác sĩ
-                  </th>
-                  <th className="py-4 px-4.5 text-left text-[14px] font-bold text-[#374151] border-b border-[#e5e7eb] w-[130px]">
-                    Phòng khám
-                  </th>
-                  <th className="py-4 px-4.5 text-left text-[14px] font-bold text-[#374151] border-b border-[#e5e7eb]">
-                    Lý do khám
-                  </th>
-                  <th className="py-4 px-4.5 text-left text-[14px] font-bold text-[#374151] border-b border-[#e5e7eb]">
-                    Chẩn đoán
-                  </th>
-                  <th className="py-4 px-4.5 text-left text-[14px] font-bold text-[#374151] border-b border-[#e5e7eb] w-[130px]">
-                    Trạng thái
-                  </th>
+            <thead className="bg-[#f8fafc]">
+              <tr>
+                <th className={thClass}>STT</th>
+                <th className={thClass}>Ngày khám</th>
+                <th className={thClass}>Giờ khám</th>
+                <th className={thClass}>Bác sĩ</th>
+                <th className={thClass}>Phòng khám</th>
+                <th className={thClass}>Lý do khám</th>
+                <th className={thClass}>Kết quả chẩn đoán</th>
+                <th className={thClass}>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageAppointments.map((apt, index) => (
+                <tr key={apt.id ?? index} className="transition-colors hover:bg-[#f9fbff]">
+                  <td className={tdClass}>{(page - 1) * PAGE_SIZE + index + 1}</td>
+                  <td className={tdClass}>{formatDate(apt.appointmentDate)}</td>
+                  <td className={tdClass}>{formatTime(apt.appointmentTime)}</td>
+                  <td className={tdClass}>{apt.doctor || "-"}</td>
+                  <td className={tdClass}>{apt.room || "-"}</td>
+                  <td className={tdClass}>{apt.reason || "-"}</td>
+                  <td className={tdClass}>{apt.diagnosis || "-"}</td>
+                  <td className={tdClass}>
+                    <StatusBadge status={apt.status} />
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {patient.appointments?.map((apt, index) => (
-                  <tr
-                    key={index}
-                    className="transition-all duration-250 hover:bg-[#f8fbff]"
-                  >
-                    <td className="py-4.5 px-4.5 border-b border-[#edf2f7] text-[15px] text-[#444] text-center">
-                      {index + 1}
-                    </td>
-                    <td className="py-4.5 px-4.5 border-b border-[#edf2f7] text-[15px] text-[#444]">
-                      {apt.appointmentDate}
-                    </td>
-                    <td className="py-4.5 px-4.5 border-b border-[#edf2f7] text-[15px] text-[#444]">
-                      {apt.appointmentTime}
-                    </td>
-                    <td className="py-4.5 px-4.5 border-b border-[#edf2f7] text-[15px] text-[#444]">
-                      {apt.doctor || "-"}
-                    </td>
-                    <td className="py-4.5 px-4.5 border-b border-[#edf2f7] text-[15px] text-[#444]">
-                      {apt.room || "-"}
-                    </td>
-                    <td className="py-4.5 px-4.5 border-b border-[#edf2f7] text-[15px] text-[#444]">
-                      {apt.reason || "-"}
-                    </td>
-                    <td className="py-4.5 px-4.5 border-b border-[#edf2f7] text-[15px] text-[#444]">
-                      {apt.diagnosis || "-"}
-                    </td>
-                    <td className="py-4.5 px-4.5 border-b border-[#edf2f7]">
-                      <span
-                        className={`inline-flex items-center justify-center min-w-[90px] px-3.5 py-1.5 rounded-[6px] text-[13px] font-semibold ${statusBadge(apt.status)}`}
-                      >
-                        {statusLabel(apt.status)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              ))}
+              {pageAppointments.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="py-10 text-center text-[14px] text-[#6b7280]">
+                    Bệnh nhân chưa có lịch khám nào
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </TableCard>
+        </Card>
       </div>
     </section>
   );
